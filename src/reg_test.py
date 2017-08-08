@@ -22,7 +22,7 @@ def main(data_loc, out_loc, epochs, batch_size, im_size, model_str):
     }
 
     parameters = {
-    'learning_rate': 0.001, 
+    'learning_rate': 0.00005, 
     'dropout': .1,
     'im_size': int(im_size)
     }

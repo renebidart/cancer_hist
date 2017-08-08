@@ -50,6 +50,7 @@ def data_generator_no_aug(file_loc, batch_size):
                     x.append(image)
                     y.append(y_temp)
 
+
             x=np.array(x)
             y=np.array(y)
             yield (x, y)
@@ -115,35 +116,6 @@ def data_gen_aug(file_loc, batch_size, image_shape=(32, 32), square_rot_p=.3, tr
             x=np.array(x)
             y=np.array(y)
             yield (x, y)
-
-###############
-
-# def create_heatmap(image_loc, model, stride = 4):
-#     image = np.array(Image.open(image_loc))
-#     image = image/255.0 # During training the images were normalized
-#     height = int(32)
-#     stride = int(stride)
-    
-#     out_size = (np.floor(np.array(image.shape)/stride)).astype(int)
-#     out_size[2] = 4 # there are 4 classes
-#     out_image = np.zeros(out_size.astype(int))
-#     print('out_image.shape', out_image.shape)
-
-#     delta=int((height)/2)
-#     image = np.lib.pad(image, ((delta, delta), (delta, delta), (0,0)), 'constant', constant_values=(0, 0))
-
-#     # Double for loop is hideous and slow. Probably should be done in GPU somehow.
-#     for row in range(0, out_image.shape[0], 1):
-#         for col in range(0, out_image.shape[1], 1):
-#             in_col = int(col*stride+delta)
-#             in_row = int(row*stride+delta)
-#             seg_image = image[in_row-delta:in_row+delta, in_col-delta:in_col+delta,:]
-#             seg_image = np.expand_dims(seg_image, axis=0) # keras expects batchsize as index 0
-#             pred = model.predict(seg_image, batch_size=1, verbose=0)
-#             out_image[row, col, :] = pred
-#     return out_image
-
-###############
 
 
 def conv1(learning_rate = .001, dropout = .5, im_size=32):
@@ -471,7 +443,6 @@ def conv_fc8(learning_rate = .001, dropout = .2, im_size=32):
     return model
 
 # Inception style models 
-# to keep this concise. same as ^ but with dropout
 
 def conv2d_bn(x,
               filters,

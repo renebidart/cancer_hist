@@ -222,51 +222,51 @@ def test_heat_preds(test_folder, heat_folder, radius, cutoff, output_class, stri
 
     return acc_dict
 
-# def test_heat_preds_variable(test_folder, heat_folder, radius, cutoff, output_class):
-#     all_files=glob.glob(os.path.join(test_folder, '*'))
-#     all_xml = [loc for loc in all_files if 'key' in loc]
-#     all_matched_pts = []
-#     all_preds = []
-#     abs_error_list = []
-#     total_nuclei = 0
-#     num_predicted =0
+def test_heat_preds_variable(test_folder, heat_folder, radius, cutoff, output_class):
+    all_files=glob.glob(os.path.join(test_folder, '*'))
+    all_xml = [loc for loc in all_files if 'key' in loc]
+    all_matched_pts = []
+    all_preds = []
+    abs_error_list = []
+    total_nuclei = 0
+    num_predicted =0
 
-#     for xml_loc in all_xml:
-#         image_name = xml_loc.rsplit('.', 1)[-2].rsplit('/', 1)[1].rsplit('.', 1)[0].rsplit('_', 1)[0]
-#         heat_loc = os.path.join(heat_folder, image_name+'_crop.npy')
+    for xml_loc in all_xml:
+        image_name = xml_loc.rsplit('.', 1)[-2].rsplit('/', 1)[1].rsplit('.', 1)[0].rsplit('_', 1)[0]
+        heat_loc = os.path.join(heat_folder, image_name+'_crop.npy')
 
-#         #load heatmap
-#         heatmap = np.load(heat_loc)
+        #load heatmap
+        heatmap = np.load(heat_loc)
 
-#         # get predictions and actual nuclei
-#         preds = non_max_supression_variable(heatmap, radius=radius, cutoff=cutoff, output_class=output_class)
-#         true_points = get_points_xml(xml_loc)
+        # get predictions and actual nuclei
+        preds = non_max_supression_variable(heatmap, radius=radius, cutoff=cutoff, output_class=output_class)
+        true_points = get_points_xml(xml_loc)
 
-#         #loop through the actual points, and check if there a corresponding prediction
-#         # Delete the true points once they are matched, so they are not mached more than once
-#         matched=0
-#         for index, point in enumerate(true_points):
-#             dists = np.sqrt(np.sum((preds[:,0:2] - point[0:2]) ** 2, axis=1))
-#             min_ind = np.argmin(dists)
-#             # if point has matching prediction, append it and increment the number of matched points
-#             if (dists[min_ind] < 10):
-#                 all_preds.append(preds[min_ind, 2])
-#                 all_matched_pts.append(true_points[index, :])
-#                 true_points[index, 0] = -100 # If the point is matched, set the coordinate to far away, like removing from list
-#                 matched=matched+1
+        #loop through the actual points, and check if there a corresponding prediction
+        # Delete the true points once they are matched, so they are not mached more than once
+        matched=0
+        for index, point in enumerate(true_points):
+            dists = np.sqrt(np.sum((preds[:,0:2] - point[0:2]) ** 2, axis=1))
+            min_ind = np.argmin(dists)
+            # if point has matching prediction, append it and increment the number of matched points
+            if (dists[min_ind] < 10):
+                all_preds.append(preds[min_ind, 2])
+                all_matched_pts.append(true_points[index, :])
+                true_points[index, 0] = -100 # If the point is matched, set the coordinate to far away, like removing from list
+                matched=matched+1
 
-#         # Update the counters
-#         total_nuclei = total_nuclei + len(true_points)
-#         num_predicted = num_predicted + len(preds)
-#         abs_error_list.append(abs(len(true_points)-len(preds)))
+        # Update the counters
+        total_nuclei = total_nuclei + len(true_points)
+        num_predicted = num_predicted + len(preds)
+        abs_error_list.append(abs(len(true_points)-len(preds)))
         
-#     acc_dict = {}
-#     acc_dict["all_preds"] = np.array(all_preds)
-#     acc_dict["all_matched_pts"] = np.array(all_matched_pts)
-#     acc_dict["total_nuclei"] = total_nuclei
-#     acc_dict["num_predicted"] = num_predicted
-#     acc_dict["abs_error"] = np.mean(abs_error_list)
-#     return acc_dict
+    acc_dict = {}
+    acc_dict["all_preds"] = np.array(all_preds)
+    acc_dict["all_matched_pts"] = np.array(all_matched_pts)
+    acc_dict["total_nuclei"] = total_nuclei
+    acc_dict["num_predicted"] = num_predicted
+    acc_dict["abs_error"] = np.mean(abs_error_list)
+    return acc_dict
 
 
 def predict_points(point_list, model, image, im_size):
