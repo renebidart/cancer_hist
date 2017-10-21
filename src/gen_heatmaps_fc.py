@@ -39,7 +39,6 @@ def main(data_loc, out_dir, model_loc, height = 64, downsample = 2):
         heat = np.reshape(heat, out_shape)
         return heat
 
-
     model = load_model(model_loc)
     # Make the output folders
     dir_list = ['valid', 'test', 'train']

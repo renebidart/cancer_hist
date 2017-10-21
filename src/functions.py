@@ -186,7 +186,7 @@ def get_matched_pts(xml_loc, heat_loc, radius, cutoff, output_class, stride):
     acc_dict["total_nuclei"] = len(true_points)
     acc_dict["num_predicted"] = len(preds)
     acc_dict["abs_error"] = abs(len(true_points)-len(preds))
-    return acc_dict   
+    return acc_dict
 
 
 
@@ -197,7 +197,7 @@ def test_heat_preds(test_folder, heat_folder, radius, cutoff, output_class, stri
     all_matched_preds = []
     abs_error_list = []
     total_nuclei = 0
-    num_predicted =0
+    num_predicted = 0
 
     for xml_loc in all_xml:
         image_name = xml_loc.rsplit('.', 1)[-2].rsplit('/', 1)[1].rsplit('.', 1)[0].rsplit('_', 1)[0]
@@ -273,27 +273,31 @@ def predict_points(point_list, model, image, im_size):
     delta=int((im_size)/2)
     image = image/255.0 # During training the images were normalized
     image = np.lib.pad(image, ((delta, delta), (delta, delta), (0,0)), 'constant', constant_values=(0, 0))
-    new_preds = point_list
+    new_preds = np.zeros((point_list.shape[0], 3))
 
     for index, point in enumerate(point_list):
         if (point[0]<0 or point[1]<0):
             print("error, skipping point: ", point)
             continue
+        # adjust for the padding that is added:
         row = int(point[0]+delta)
         col = int(point[1]+delta)
         seg_image = image[row-delta:row+delta, col-delta:col+delta, :]
         seg_image = np.expand_dims(seg_image, axis=0) # keras expects batchsize as index 0
         pred = model.predict(seg_image, batch_size=1, verbose=0)
         pred = np.argmax(pred[0][1:])+1
-        new_preds[index, 2] = pred
+
+        new_preds[index][0] = int(point[0])
+        new_preds[index][1] = int(point[1])
+        new_preds[index][2] = pred
     return new_preds
 
 
-def get_matched_pts2(true_points, preds, radius, cutoff, output_class, stride, im_size):
+def get_matched_pts2(true_points, preds, cor_rad=10):
     all_matched_pts = []
     all_matched_preds = []
     total_nuclei = 0
-    num_predicted =0
+    num_predicted = 0
 
     #loop through the predictions, and check if there a corresponding true point
     # Delete the true points once they are matched, so they are not mached more than once
@@ -305,7 +309,7 @@ def get_matched_pts2(true_points, preds, radius, cutoff, output_class, stride, i
         else:
             min_ind = np.argmin(dists)
             # if point has matching prediction, append it and increment the number of matched points
-            if (dists[min_ind] < 10):
+            if (dists[min_ind] < cor_rad):
                 all_matched_preds.append(preds[index, 2:])
                 all_matched_pts.append(tp_temp[min_ind, :])
                 tp_temp = np.delete(tp_temp, (min_ind), axis=0) # If the point is matched, delete from list
@@ -337,7 +341,6 @@ def test_heat_preds_2stage(test_folder, heat_folder, model, radius, cutoff, outp
         print('test_loc ', test_loc)
         print('image.shape', image.shape)
 
-
         # get predictions and actual nuclei
         true_points = get_points_xml(xml_loc)
         point_list = non_max_supression(heatmap=heat, radius=radius, cutoff = cutoff, stride = stride)
@@ -359,9 +362,31 @@ def test_heat_preds_2stage(test_folder, heat_folder, model, radius, cutoff, outp
     acc_dict["total_nuclei"] = total_nuclei
     acc_dict["num_predicted"] = num_predicted
     acc_dict["abs_error"] = np.mean(abs_error_list)
-
     return acc_dict
 
 
+def create_heatmap(image_loc, model_loc, height, downsample):
+    def softmax(x):
+        e_x = np.exp(x - np.max(x))
+        return e_x / e_x.sum()
+    
+    image = np.array(Image.open(image_loc))
+    image_shape = image.shape
+    image = image/255.0 # During training the images were normalized
+    height = int(height)
+    
+    model = load_model(model_loc)
+    last = model.layers[-2].output
+    model = Model(model.input, last)
+
+    out_shape = np.ceil(np.array(image.shape)/float(downsample)).astype(int)
+    out_shape[2] = 4 # there are 4 classes
+
+    delta=int((height)/2)
+    image = np.lib.pad(image, ((delta, delta-int(downsample)), (delta, delta-int(downsample)), (0,0)), 'constant', constant_values=(0, 0))
+    image = np.expand_dims(image, axis=0)
+    heat = model.predict(image, batch_size=1, verbose=0)
+    heat = np.reshape(heat, out_shape)
+    return heat
 
 

@@ -46,7 +46,7 @@ def data_gen_loc_aug(file_loc, batch_size, image_shape=(100, 100)):
             batch_files = all_files[num_img*batch:num_img*(batch+1)]
 
             for image_file in batch_files:
-                x_temp, y_temp = get_imgs_noloc(image_file, num_regions = int(batch_size/num_img), im_size = image_shape[0])
+                x_temp, y_temp = get_imgs_noloc_aug(image_file, num_regions = int(batch_size/num_img), im_size = image_shape[0])
                 y.extend(y_temp)
                 x.extend(x_temp)
             x=np.array(x)
@@ -72,7 +72,7 @@ def data_gen_loc_no_aug(file_loc, batch_size, image_shape=(100, 100)):
             batch_files = all_files[num_img*batch:num_img*(batch+1)]
 
             for image_file in batch_files:
-                x_temp, y_temp = get_imgs_noloc_aug(image_file, num_regions = int(batch_size/num_img), im_size = image_shape[0])
+                x_temp, y_temp = get_imgs_noloc(image_file, num_regions = int(batch_size/num_img), im_size = image_shape[0])
                 y.extend(y_temp)
                 x.extend(x_temp)
             x=np.array(x)

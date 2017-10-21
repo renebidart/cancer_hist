@@ -24,7 +24,7 @@ from keras.layers.convolutional import MaxPooling2D, AveragePooling2D
 from keras.layers.normalization import BatchNormalization
 
 
-def data_generator_no_aug(file_loc, batch_size):
+def data_generator_no_aug(file_loc, batch_size, num_out=2):
     bad_files = []
     while 1:
         all_files=glob.glob(os.path.join(file_loc, '*'))
@@ -45,7 +45,7 @@ def data_generator_no_aug(file_loc, batch_size):
                     image = image/255.0
 
                     y_temp = np.array(int(image_loc.rsplit('/', 1)[-1].split('_', 1)[0]))
-                    y_temp = np.eye(4)[y_temp]
+                    y_temp = np.eye(num_out)[y_temp]
 
                     x.append(image)
                     y.append(y_temp)
@@ -56,7 +56,7 @@ def data_generator_no_aug(file_loc, batch_size):
             yield (x, y)
 
 
-def data_gen_aug(file_loc, batch_size, image_shape=(32, 32), square_rot_p=.3, translate = 3):
+def data_gen_aug(file_loc, batch_size, image_shape=(32, 32), square_rot_p=.3, translate = 3, num_out=2):
     # square_rot_p is the prob of using a 90x rotation, otherwise sample from 360. Possibly not useful
     # translate is maximum number of pixels to translate by. Make it close the doctor's variance in annotation
     square_rot_p = int(square_rot_p)
@@ -108,11 +108,82 @@ def data_gen_aug(file_loc, batch_size, image_shape=(32, 32), square_rot_p=.3, tr
 
                 image = image/255.0 # make pixels in [0,1]        
                 y_temp = np.array(int(image_loc.rsplit('/', 1)[-1].split('_', 1)[0]))
-                y_temp = np.eye(4)[y_temp]
+                y_temp = np.eye(num_out)[y_temp]
                 
                 x.append(image)
                 y.append(y_temp)
             
+            x=np.array(x)
+            y=np.array(y)
+            yield (x, y)
+
+
+def data_gen(file_loc, batch_size, im_size=None, 
+    square_rot_p=.3, translate=0, flips=False, rotate=False):
+    # square_rot_p is the prob of using a 90x rotation, otherwise sample from 360. Possibly not useful
+    # translate is maximum number of pixels to translate by. Make it close the doctor's variance in annotation
+
+    square_rot_p = float(square_rot_p)
+    translate = int(translate)
+    im_size = int(im_size)
+
+    all_files=glob.glob(os.path.join(file_loc, '*'))
+
+    while 1:
+        random.shuffle(all_files) # randomize after every epoch
+        num_batches = int(np.floor(len(all_files)/batch_size))
+
+        for batch in range(num_batches):
+            x=[]
+            y=[]
+            batch_files = all_files[batch_size*batch:batch_size*(batch+1)]
+            for image_loc in batch_files:
+                image = Image.open(image_loc)
+
+                # APPLY AUGMENTATION:
+                # flips
+                if flips:
+                    flip_vert = random.randint(0, 1)
+                    flip_hor = random.randint(0, 1)
+                    if flip_vert:
+                        image = image.transpose(Image.FLIP_TOP_BOTTOM)
+                    if flip_hor:
+                        image = image.transpose(Image.FLIP_LEFT_RIGHT)
+
+                # rotation
+                if rotate:
+                    square_rot =  bool((np.random.uniform(0, 1, 1)<square_rot_p))
+                    if square_rot:  # maybe this is dumb, but it cant hurt
+                        angle = random.randint(0, 4)
+                        if(angle ==0):
+                            image = image.transpose(Image.ROTATE_90)
+                        elif(angle ==1):
+                            image = image.transpose(Image.ROTATE_180)
+                        elif(angle ==2):
+                            image = image.transpose(Image.ROTATE_270)
+                    else:
+                        angle = np.random.uniform(0, 360,1)
+                        image=image.rotate(angle)
+
+                if(im_size != 0):
+                    image_shape = (im_size, im_size)
+                    image = image.resize(image_shape)
+
+                # translate
+                ts_sz_row = randint(-1*translate, translate)
+                ts_sz_col = randint(-1*translate, translate)
+
+                image = image.transform(image.size, Image.AFFINE, (1, 0, ts_sz_row, 0, 1, ts_sz_col))
+
+                image = np.reshape(np.array(image.getdata()), (im_size, im_size, 3))
+                image = image/255.0 
+
+                label = image_loc.rsplit('/', 1)[1][0]
+                y_temp = int(label)
+                y_temp = np.eye(2)[y_temp]
+                
+                x.append(image)
+                y.append(y_temp)
             x=np.array(x)
             y=np.array(y)
             yield (x, y)
@@ -280,7 +351,7 @@ def conv_fc3(learning_rate = .001, dropout = .2, im_size=32):
     model.add(keras.layers.normalization.BatchNormalization())
     model.add(Dropout(dropout))
 
-    model.add(Conv2D(4, (1, 1), padding='valid', kernel_initializer='he_normal'))
+    model.add(Conv2D(2, (1, 1), padding='valid', kernel_initializer='he_normal'))
     model.add(keras.layers.normalization.BatchNormalization())
     model.add(Dropout(dropout))
 
@@ -395,7 +466,7 @@ def conv_fc6(learning_rate = .001, dropout = .2, im_size=32):
     model.compile(loss="categorical_crossentropy", optimizer=Adam, metrics=['accuracy'])
     return model
 
-def conv_fc7(learning_rate = .001, dropout = .2, im_size=32):
+def conv_fc7(learning_rate = .001, dropout = .2, im_size=32, num_out=2):
     input_shape = (None, None, 3)
     img_input = Input(shape=input_shape)
 
@@ -408,7 +479,7 @@ def conv_fc7(learning_rate = .001, dropout = .2, im_size=32):
     
     # to make it fully convolutional we use a convolution layer to reshape rather than fully connected
     # Valid padding instead of using global average pooling. We want the class for the center, so shouldnt average overall class probs
-    x = conv2d_bn(x, 4, int(im_size/2), int(im_size/2), dropout = dropout, padding='valid', strides=(1, 1))
+    x = conv2d_bn(x, num_out, int(im_size/2), int(im_size/2), dropout = dropout, padding='valid', strides=(1, 1))
 
     x = Lambda(flatten)(x)
     x = Activation('softmax')(x)
@@ -601,7 +672,7 @@ def conv_incp2(learning_rate = .001, dropout = .1, im_size=32):
 
 
 # Smaller  one with downsampling at start
-def conv_incp3(learning_rate = .001, dropout = .1, im_size=32):
+def conv_incp3(learning_rate = .001, dropout = .1, im_size=32, num_out=2):
     input_shape = (None, None, 3)
     img_input = Input(shape=input_shape)
 
@@ -639,7 +710,7 @@ def conv_incp3(learning_rate = .001, dropout = .1, im_size=32):
     x = layers.concatenate(
         [branch1x1, branch5x5, branch3x3dbl, branch_pool])
 
-    x = conv2d_bn(x, 4, int(im_size/2), int(im_size/2), dropout = dropout, padding='valid', strides=(1, 1))
+    x = conv2d_bn(x, num_out, int(im_size/2), int(im_size/2), dropout = dropout, padding='valid', strides=(1, 1))
 
     x = Lambda(flatten)(x)
     x = Activation('softmax')(x)

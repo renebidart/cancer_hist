@@ -73,7 +73,7 @@ def main(data_loc, out_dir, radius=10):
                 col_loc = point_list[index, 1]
                 nucleus_type = point_list[index, 2]
 
-                label_image = add_nuclei(image=label_image, row_loc=row_loc, col_loc=col_loc, radius=radius, type=1)
+                label_image = add_nuclei(image=label_image, row_loc=row_loc, col_loc=col_loc, radius=radius, type=int(nucleus_type))
 
             # remove the unnecessary padding
             label_image = label_image[radius:np.shape(label_image)[0]-radius, radius:np.shape(label_image)[1]-radius, :]

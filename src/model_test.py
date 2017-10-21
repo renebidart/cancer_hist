@@ -25,11 +25,12 @@ def main(data_loc, out_loc, epochs, batch_size, im_size, model_str):
     'conv_fc2': conv_fc2,
     'conv_fc3': conv_fc3,
     'conv_fc8': conv_fc8,
+    'conv_fc7': conv_fc7,
     'conv_incp3' : conv_incp3
     }
 
     parameters = {
-    'learning_rate': .0001, 
+    'learning_rate': .0002, 
     'dropout': .1,
     'im_size': int(im_size)
     }
@@ -47,7 +48,7 @@ def main(data_loc, out_loc, epochs, batch_size, im_size, model_str):
     epochs=int(epochs)
     batch_size=int(batch_size)   # make this divisible by len(x_data)
     steps_per_epoch = np.floor(num_train/batch_size) # num of batches from generator at each epoch. (make it full train set)
-    validation_steps = np.floor(num_valid/batch_size)# size of validation dataset divided by batch size
+    validation_steps = np.floor(num_valid/batch_size) # size of validation dataset divided by batch size
     print('validation_steps', validation_steps)
     image_shape = (int(im_size), int(im_size))
 
