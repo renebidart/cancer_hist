@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<session software="PathCore Session Printer" version="0.1.0">
+    <image identifier="Y:\histology\CCSRI_Project\PostTreatment\ExtractedNucleiROIs\115_Region 3_crop.tif">
+        <overlays>
+            <graphic type="point" name="Region 4" description="IDC">
+                <pen color="#005500ff" width="10" style="Solid"/>
+                <font>MS Shell Dlg 2;8</font>
+                <point-list>
+                    <point>219,77</point>
+                    <point>233,85</point>
+                    <point>285,118</point>
+                    <point>313,141</point>
+                    <point>333,168</point>
+                    <point>345,188</point>
+                    <point>292,162</point>
+                    <point>352,263</point>
+                    <point>330,234</point>
+                    <point>374,210</point>
+                    <point>335,302</point>
+                    <point>337,275</point>
+                    <point>151,356</point>
+                    <point>120,300</point>
+                    <point>129,377</point>
+                    <point>28,336</point>
+                    <point>58,322</point>
+                    <point>69,311</point>
+                    <point>178,88</point>
+                    <point>174,76</point>
+                </point-list>
+            </graphic>
+            <graphic type="point" name="Region 5" description="normal">
+                <pen color="#ff0000ff" width="10" style="Solid"/>
+                <font>MS Shell Dlg 2;8</font>
+                <point-list>
+                    <point>362,40</point>
+                    <point>367,50</point>
+                    <point>367,62</point>
+                    <point>371,68</point>
+                    <point>360,73</point>
+                    <point>351,66</point>
+                    <point>351,57</point>
+                    <point>342,41</point>
+                    <point>343,52</point>
+                    <point>390,6</point>
+                    <point>369,7</point>
+                    <point>393,23</point>
+                    <point>405,14</point>
+                    <point>483,7</point>
+                    <point>487,24</point>
+                    <point>478,29</point>
+                    <point>496,50</point>
+                    <point>484,48</point>
+                    <point>478,50</point>
+                    <point>468,38</point>
+                    <point>458,51</point>
+                    <point>454,39</point>
+                    <point>452,27</point>
+                    <point>456,12</point>
+                    <point>443,9</point>
+                </point-list>
+            </graphic>
+            <graphic type="point" name="Region 6" description="TIL-S">
+                <pen color="#000000ff" width="10" style="Solid"/>
+                <font>MS Shell Dlg 2;8</font>
+                <point-list>
+                    <point>397,120</point>
+                    <point>381,119</point>
+                    <point>240,129</point>
+                    <point>211,178</point>
+                </point-list>
+            </graphic>
+        </overlays>
+</session>

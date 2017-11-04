@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<session software="PathCore Session Printer" version="0.1.0">
+    <image identifier="Y:\histology\CCSRI_Project\PostTreatment\ExtractedNucleiROIs\106_Region 1_crop.tif">
+        <overlays>
+            <graphic type="point" name="Region 2" description="IDC ">
+                <pen color="#005500ff" width="10" style="Solid"/>
+                <font>MS Shell Dlg 2;8</font>
+                <point-list>
+                    <point>97,16</point>
+                    <point>68,36</point>
+                    <point>73,63</point>
+                    <point>112,42</point>
+                    <point>88,45</point>
+                    <point>78,15</point>
+                    <point>132,60</point>
+                    <point>76,86</point>
+                    <point>93,107</point>
+                    <point>140,161</point>
+                    <point>130,149</point>
+                    <point>193,96</point>
+                    <point>213,113</point>
+                    <point>225,138</point>
+                    <point>229,150</point>
+                    <point>215,151</point>
+                    <point>217,166</point>
+                    <point>221,179</point>
+                    <point>209,185</point>
+                    <point>187,204</point>
+                    <point>166,213</point>
+                    <point>154,195</point>
+                    <point>311,64</point>
+                    <point>306,75</point>
+                    <point>321,102</point>
+                    <point>343,76</point>
+                    <point>356,95</point>
+                    <point>366,106</point>
+                    <point>351,114</point>
+                    <point>371,124</point>
+                    <point>578,143</point>
+                    <point>570,169</point>
+                    <point>167,381</point>
+                    <point>164,395</point>
+                    <point>132,389</point>
+                    <point>131,369</point>
+                    <point>124,332</point>
+                    <point>131,318</point>
+                    <point>145,319</point>
+                </point-list>
+            </graphic>
+        </overlays>
+</session>
