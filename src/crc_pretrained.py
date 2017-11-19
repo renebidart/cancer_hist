@@ -1,5 +1,3 @@
-#from __future__ import absolute_import, division, print_function, unicode_literals
-
 from heat_models import*
 import sys
 
@@ -26,11 +24,11 @@ def main(data_loc, out_loc, epochs, batch_size, im_size, model_str):
     'conv_fc3': conv_fc3,
     'conv_fc8': conv_fc8,
     'conv_fc7': conv_fc7,
-    'conv_incp3' : conv_incp3,
-    'conv_incp3b' : conv_incp3b
+    'conv_incp3' : conv_incp3
     }
 
     # Locations
+    model_loc = '/home/rbbidart/cancer_hist_out/cancer_hist/conv_incp3/conv_incp3_128_.46-0.91.hdf5'
     train_loc = os.path.join(str(data_loc),'train')
     valid_loc = os.path.join(str(data_loc),'valid')
     num_train = len(glob.glob(train_loc+'/**/*', recursive=True))
@@ -39,15 +37,7 @@ def main(data_loc, out_loc, epochs, batch_size, im_size, model_str):
     print('num_train', num_train)
     print('num_valid', num_valid)
 
-    num_out = int(len(glob.glob(train_loc+'/*')))
-    print('num_out', num_out)
 
-    parameters = {
-    'learning_rate': .0002, 
-    'dropout': .1,
-    'im_size': int(im_size),
-    'num_out': num_out
-    }
     im_size = int(im_size)
 
     # Params for all models
@@ -90,8 +80,16 @@ def main(data_loc, out_loc, epochs, batch_size, im_size, model_str):
             batch_size=batch_size,
             class_mode='categorical')
 
-
+    # load model , remove last conv layer and set the correct ones to trainable
+    parameters = {
+    'learning_rate': .0002, 
+    'dropout': .1,
+    'im_size': int(im_size),
+    'num_out': 4
+    }
     model = functionList[model_str](**parameters)
+    model.load_weights(model_loc)
+
     print(model.summary())
     name = model_str+'_'+str(im_size)
     out_file=os.path.join(str(out_loc), name)

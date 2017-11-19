@@ -1,6 +1,7 @@
 *.pyc
 /.ipynb_checkpoints
 **/*.ipynb_checkpoints/
+**/*._*
 
 .DS_Store
 .DS_Store?

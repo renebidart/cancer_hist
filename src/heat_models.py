@@ -21,6 +21,7 @@ from keras.constraints import maxnorm
 from keras.optimizers import SGD
 from keras.layers.convolutional import Conv2D
 from keras.layers.convolutional import MaxPooling2D, AveragePooling2D
+from keras.layers import GlobalAveragePooling2D
 from keras.layers.normalization import BatchNormalization
 
 
@@ -489,7 +490,7 @@ def conv_fc7(learning_rate = .001, dropout = .2, im_size=32, num_out=2):
     model.compile(loss="categorical_crossentropy", optimizer=Adam, metrics=['accuracy'])
     return model
 
-def conv_fc8(learning_rate = .001, dropout = .2, im_size=32):
+def conv_fc8(learning_rate = .001, dropout = .2, im_size=32, num_out=2):
     input_shape = (None, None, 3)
     img_input = Input(shape=input_shape)
 
@@ -503,7 +504,7 @@ def conv_fc8(learning_rate = .001, dropout = .2, im_size=32):
 
     # to make it fully convolutional we use a convolution layer to reshape rather than fully connected
     # Valid padding instead of using global average pooling. We want the class for the center, so shouldnt average overall class probs
-    x = conv2d_bn(x, 4, int(im_size/4), int(im_size/4), dropout = dropout, padding='valid', strides=(1, 1))
+    x = conv2d_bn(x, num_out, int(im_size/4), int(im_size/4), dropout = dropout, padding='valid', strides=(1, 1))
 
     x = Lambda(flatten)(x)
     x = Activation('softmax')(x)
@@ -719,6 +720,59 @@ def conv_incp3(learning_rate = .001, dropout = .1, im_size=32, num_out=2):
     Adam = keras.optimizers.Adam(lr=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
     model.compile(loss="categorical_crossentropy", optimizer=Adam, metrics=['accuracy'])
     return model
+
+
+
+def conv_incp3b(learning_rate = .001, dropout = .1, im_size=32, num_out=2):
+    input_shape = (None, None, 3)
+    img_input = Input(shape=input_shape)
+
+    # Remove stride in the first layer, no max pool, 3 instead of 5
+    x = conv2d_bn(img_input, 32, 3, 3, dropout = dropout, padding='same', strides=(1, 1))
+    x = conv2d_bn(x, 32, 3, 3, dropout = dropout, padding='same', strides=(2, 2))
+
+    # Inception Blocks - Mixed 1
+    branch1x1 = conv2d_bn(x, 32, 1, 1, dropout = dropout)
+
+    branch5x5 = conv2d_bn(x, 24, 1, 1, dropout = dropout)
+    branch5x5 = conv2d_bn(branch5x5, 32, 5, 5, dropout = dropout)
+
+    branch3x3dbl = conv2d_bn(x, 32, 1, 1, dropout = dropout)
+    branch3x3dbl = conv2d_bn(branch3x3dbl, 48, 3, 3, dropout = dropout)
+    branch3x3dbl = conv2d_bn(branch3x3dbl, 48, 3, 3, dropout = dropout)
+
+    branch_pool = AveragePooling2D((3, 3), strides=(1, 1), padding='same')(x)
+    branch_pool = conv2d_bn(branch_pool, 16, 1, 1, dropout = dropout)
+    x = layers.concatenate(
+        [branch1x1, branch5x5, branch3x3dbl, branch_pool])
+
+    # mixed 2
+    branch1x1 = conv2d_bn(x, 16, 1, 1, dropout = dropout)
+
+    branch5x5 = conv2d_bn(x, 12, 1, 1, dropout = dropout)
+    branch5x5 = conv2d_bn(branch5x5, 32, 5, 5, dropout = dropout)
+
+    branch3x3dbl = conv2d_bn(x, 16, 1, 1, dropout = dropout)
+    branch3x3dbl = conv2d_bn(branch3x3dbl, 24, 3, 3, dropout = dropout)
+    branch3x3dbl = conv2d_bn(branch3x3dbl, 24, 3, 3, dropout = dropout)
+
+    branch_pool = AveragePooling2D((3, 3), strides=(1, 1), padding='same')(x)
+    branch_pool = conv2d_bn(branch_pool, 16, 1, 1, dropout = dropout)
+    x = layers.concatenate(
+        [branch1x1, branch5x5, branch3x3dbl, branch_pool])
+
+    x = conv2d_bn(x, 24, int(im_size/2), int(im_size/2), dropout = dropout*2, padding='valid', strides=(1, 1))
+
+    x = GlobalAveragePooling2D()(x)
+
+    x = Dense(num_out)(x)
+    x = Activation('softmax')(x)
+
+    model = Model(img_input, x)
+    Adam = keras.optimizers.Adam(lr=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
+    model.compile(loss="categorical_crossentropy", optimizer=Adam, metrics=['accuracy'])
+    return model
+
 
 
 # Smaller  one with no downsampling at end

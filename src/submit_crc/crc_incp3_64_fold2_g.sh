@@ -8,4 +8,4 @@
 module load cuda cudnn python/3.5.2
 source tensorflow3/bin/activate
 
-python /home/rbbidart/cancer_hist/src/crc_train.py /home/rbbidart/project/rbbidart/cancer_hist/crc_2_fold/crc_64_fold_1 /home/rbbidart/cancer_hist_out/crc/incp3_64_f2 120 16 64 conv_incp3
+python /home/rbbidart/cancer_hist/src/crc_train.py /home/rbbidart/project/rbbidart/cancer_hist/crc_2_fold/crc_64_fold_2 /home/rbbidart/cancer_hist_out/crc/incp3_64_f2 120 16 64 conv_incp3

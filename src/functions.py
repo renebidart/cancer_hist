@@ -269,7 +269,7 @@ def test_heat_preds_variable(test_folder, heat_folder, radius, cutoff, output_cl
     return acc_dict
 
 
-def predict_points(point_list, model, image, im_size):
+def predict_points(point_list, model, image, im_size, heat=True):
     delta=int((im_size)/2)
     image = image/255.0 # During training the images were normalized
     image = np.lib.pad(image, ((delta, delta), (delta, delta), (0,0)), 'constant', constant_values=(0, 0))
@@ -285,7 +285,10 @@ def predict_points(point_list, model, image, im_size):
         seg_image = image[row-delta:row+delta, col-delta:col+delta, :]
         seg_image = np.expand_dims(seg_image, axis=0) # keras expects batchsize as index 0
         pred = model.predict(seg_image, batch_size=1, verbose=0)
-        pred = np.argmax(pred[0][1:])+1
+        if heat:
+            pred = np.argmax(pred[0][1:])+1
+        else:
+            pred = np.argmax(pred[0])+1
 
         new_preds[index][0] = int(point[0])
         new_preds[index][1] = int(point[1])
