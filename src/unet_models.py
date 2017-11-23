@@ -194,6 +194,7 @@ def conv_block(x,
     return x
 
 
+
 ############ UNET ARCHITECTURES 
 def unet_dp_bn(learning_rate=.0001):
     input_shape = (None, None, 3)
@@ -303,4 +304,46 @@ def half_n_half(learning_rate=.0001):
     model = Model(img_input, conv10)
     model.compile(optimizer=Adam(lr=learning_rate), loss=dice_coef_loss, metrics=[dice_coef])
     return model
+
+
+def unet_paper(learning_rate=.0001):
+    input_shape = (None, None, 3)
+    img_input = Input(shape=input_shape)
+
+    conv1 = conv_block(img_input, 32, 3, 3, dropout = .1, padding='same', strides=(1, 1), activation='relu')
+    pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
+
+    conv2 = conv_block(pool1, 64, 3, 3, dropout = .1, padding='same', strides=(1, 1), activation='relu')
+    pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
+
+    conv3 = conv_block(pool2, 128, 3, 3, dropout = .1, padding='same', strides=(1, 1), activation='relu')
+    pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
+
+    conv4 = conv_block(pool3, 128, 3, 3, dropout = .1, padding='same', strides=(1, 1), activation='relu')
+
+    up5 = concatenate([Conv2DTranspose(256, (2, 2), strides=(2, 2), padding='same')(conv4), conv3], axis=3)
+    conv5 = conv_block(up5, 128, 3, 3, dropout = .1, padding='same', strides=(1, 1), activation='relu')
+
+    up6 = concatenate([Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(conv5), conv2], axis=3)
+    conv6 = conv_block(up6, 64, 3, 3, dropout = .1, padding='same', strides=(1, 1), activation='relu')
+
+    up7 = concatenate([Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same')(conv6), conv1], axis=3)
+    conv7 = conv_block(up7, 32, 3, 3, dropout = .1, padding='same', strides=(1, 1), activation='relu')
+    
+    conv8_dist = Conv2D(1, (1, 1), activation='sigmoid')(conv7)
+    conv8_cross_entropy = Conv2D(3, (1, 1), activation='softmax')(conv7)
+    output = concatenate([conv8_dist, conv8_cross_entropy])
+    
+    model = Model(img_input, output)
+    model.compile(optimizer=Adam(lr=learning_rate), loss=distance_loss, metrics=[distance_loss])
+    return model
+
+
+def distance_loss(y_true, y_pred):
+    weight = .5 # how mush does the distance matter compared to the cross entropy (fast ai used .001 for 4 more uncertain ones)
+    distance_loss = K.binary_crossentropy(y_pred[:, :, :, 0], y_true[:, :, :, 0])    
+    cross_entropy = K.categorical_crossentropy(y_true[:, :, :, 1:], y_pred[:, :, :, 1:])    
+
+    return(distance_loss*weight+(1-weight)*cross_entropy)
+
 
